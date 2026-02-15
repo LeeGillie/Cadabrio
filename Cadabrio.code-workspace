@@ -1,0 +1,75 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.conda/python",
+        "python.condaPath": "conda",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "editor.formatOnSave": true,
+        "editor.rulers": [100],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "files.associations": {
+            "*.json": "json",
+            "*.yml": "yaml"
+        },
+        "[python]": {
+            "editor.defaultFormatter": "ms-python.black-formatter",
+            "editor.tabSize": 4
+        },
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"],
+        "search.exclude": {
+            "**/__pycache__": true,
+            "**/*.pyc": true,
+            ".conda/**": true,
+            "*.egg-info/**": true
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-python.black-formatter",
+            "ms-python.isort",
+            "ms-toolsai.jupyter",
+            "eamodio.gitlens",
+            "gruntfuggly.todo-tree",
+            "tamasfe.even-better-toml",
+            "redhat.vscode-yaml"
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Cadabrio: Launch",
+                "type": "debugpy",
+                "request": "launch",
+                "module": "cadabrio",
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "CADABRIO_DEV": "1"
+                },
+                "justMyCode": false
+            },
+            {
+                "name": "Cadabrio: Launch (Debug GPU)",
+                "type": "debugpy",
+                "request": "launch",
+                "module": "cadabrio",
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "CADABRIO_DEV": "1",
+                    "CUDA_LAUNCH_BLOCKING": "1"
+                },
+                "justMyCode": false
+            }
+        ]
+    }
+}

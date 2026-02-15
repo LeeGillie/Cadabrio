@@ -1,0 +1,56 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Cadabrio: Run",
+            "type": "shell",
+            "command": "conda",
+            "args": ["run", "-n", "cadabrio", "python", "-m", "cadabrio"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Cadabrio: Run Tests",
+            "type": "shell",
+            "command": "conda",
+            "args": ["run", "-n", "cadabrio", "pytest", "tests/", "-v"],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Cadabrio: Lint",
+            "type": "shell",
+            "command": "conda",
+            "args": ["run", "-n", "cadabrio", "ruff", "check", "src/", "tests/"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Cadabrio: Format",
+            "type": "shell",
+            "command": "conda",
+            "args": ["run", "-n", "cadabrio", "black", "src/", "tests/"],
+            "group": "build"
+        },
+        {
+            "label": "Cadabrio: Setup Environment",
+            "type": "shell",
+            "command": "conda",
+            "args": ["env", "create", "-f", "environment.yml"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

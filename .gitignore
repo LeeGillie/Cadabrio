@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environments
+.conda/
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# NVIDIA / CUDA
+*.cubin
+*.fatbin
+*.ptx
+
+# AI Models (large files - use Git LFS or download scripts)
+models/
+*.onnx
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+!src/cadabrio/**/*.py
+
+# Project runtime
+logs/
+*.log
+cadabrio_config.json
+user_themes/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Distribution
+*.spec

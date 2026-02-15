@@ -1,0 +1,64 @@
+# Cadabrio Conda Environment
+# Targeting: RTX 5090 (Blackwell, compute capability 12.0)
+# Platform: Windows 11 Pro, Intel Core Ultra 9 285K, 64GB RAM
+#
+# IMPORTANT: RTX 5090 (Blackwell) requires CUDA 12.8+ and PyTorch 2.6+
+# Do NOT downgrade cuda-toolkit or pytorch below these versions.
+
+name: cadabrio
+channels:
+  - pytorch
+  - nvidia/label/cuda-12.8.0
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.12
+  - pip>=24.0
+
+  # CUDA Toolkit - RTX 5090 Blackwell requires 12.8+
+  - cuda-toolkit=12.8
+
+  # PyTorch with CUDA 12.8 - Blackwell support requires 2.6+
+  - pytorch>=2.6
+  - torchvision>=0.21
+  - torchaudio>=2.6
+
+  # Scientific computing
+  - numpy>=1.26
+  - scipy>=1.12
+  - scikit-image>=0.22
+
+  # Computer vision
+  - opencv>=4.9
+
+  # 3D processing
+  - open3d>=0.18
+
+  # pip-only packages
+  - pip:
+    - PySide6>=6.7
+    - trimesh>=4.0
+    - pygltflib>=1.16
+    - Pillow>=10.0
+    - pyyaml>=6.0
+    - platformdirs>=4.0
+    - loguru>=0.7
+    - transformers>=4.40
+    - safetensors>=0.4
+    - accelerate>=0.28
+    - onnxruntime-gpu>=1.17
+    - huggingface-hub>=0.22
+
+    # Development tools
+    - pytest>=8.0
+    - pytest-qt>=4.3
+    - pytest-cov>=4.1
+    - black>=24.0
+    - isort>=5.13
+    - ruff>=0.3
+    - mypy>=1.8
+    - pre-commit>=3.6
+
+    # Project install in editable mode
+    - -e .

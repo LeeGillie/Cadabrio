@@ -1,0 +1,63 @@
+{
+    "name": "Cadabrio Dark",
+    "description": "Default Cadabrio theme - dark background with neon green accents",
+    "author": "Cadabrio Team",
+    "version": "1.0",
+    "colors": {
+        "background_primary": "#0d0d1a",
+        "background_secondary": "#141428",
+        "background_tertiary": "#1a1a2e",
+        "background_panel": "#12121f",
+        "background_input": "#1e1e35",
+        "background_hover": "#252545",
+        "background_selected": "#1a3a1a",
+
+        "foreground_primary": "#e0e0e0",
+        "foreground_secondary": "#a0a0b0",
+        "foreground_muted": "#6a6a80",
+        "foreground_disabled": "#4a4a5a",
+
+        "accent_primary": "#39ff14",
+        "accent_secondary": "#32e010",
+        "accent_tertiary": "#28c00e",
+        "accent_hover": "#50ff3a",
+        "accent_muted": "#1a8a0a",
+
+        "border_primary": "#2a2a45",
+        "border_secondary": "#3a3a55",
+        "border_accent": "#39ff14",
+
+        "success": "#39ff14",
+        "warning": "#ffd700",
+        "error": "#ff4757",
+        "info": "#00d4ff",
+
+        "scrollbar_track": "#141428",
+        "scrollbar_handle": "#2a2a45",
+        "scrollbar_handle_hover": "#39ff14",
+
+        "tab_active": "#1a1a2e",
+        "tab_inactive": "#0d0d1a",
+        "tab_hover": "#252545",
+        "tab_indicator": "#39ff14",
+
+        "toolbar_background": "#0d0d1a",
+        "statusbar_background": "#0a0a15",
+        "statusbar_foreground": "#39ff14",
+
+        "menu_background": "#141428",
+        "menu_hover": "#252545",
+        "menu_separator": "#2a2a45",
+
+        "tooltip_background": "#1e1e35",
+        "tooltip_foreground": "#e0e0e0",
+        "tooltip_border": "#39ff14",
+
+        "splitter": "#2a2a45",
+        "splitter_hover": "#39ff14",
+
+        "viewport_background": "#0a0a12",
+        "viewport_grid": "#1a1a30",
+        "viewport_grid_accent": "#2a2a50"
+    }
+}
