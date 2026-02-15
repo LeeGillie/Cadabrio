@@ -31,6 +31,8 @@ class CadabrioMainWindow(QMainWindow):
         self.setWindowTitle(__version_display__)
         self.setMinimumSize(1280, 800)
 
+        self._resource_monitor = None
+
         self._build_menu_bar()
         self._build_tool_bar()
         self._build_status_bar()
@@ -68,6 +70,12 @@ class CadabrioMainWindow(QMainWindow):
         view_menu.addAction(self._action("&3D Viewport", "F5"))
         view_menu.addAction(self._action("AI &Chat", "F6"))
         view_menu.addAction(self._action("&Asset Browser", "F7"))
+        view_menu.addSeparator()
+        self._resource_monitor_action = QAction("&Resource Monitor", self)
+        self._resource_monitor_action.setShortcut(QKeySequence("F9"))
+        self._resource_monitor_action.setCheckable(True)
+        self._resource_monitor_action.toggled.connect(self._toggle_resource_monitor)
+        view_menu.addAction(self._resource_monitor_action)
         view_menu.addSeparator()
         view_menu.addAction(self._action("&Full Screen", "F11"))
 
@@ -111,6 +119,9 @@ class CadabrioMainWindow(QMainWindow):
         self.setStatusBar(status)
         self._status_label = QLabel("Ready")
         status.addWidget(self._status_label)
+
+        self._integrations_label = QLabel("Integrations: ...")
+        status.addPermanentWidget(self._integrations_label)
 
         self._gpu_label = QLabel("GPU: Detecting...")
         status.addPermanentWidget(self._gpu_label)
@@ -209,11 +220,42 @@ class CadabrioMainWindow(QMainWindow):
             "<p>Full attribution details in ATTRIBUTIONS.md</p>",
         )
 
+    def _toggle_resource_monitor(self, checked: bool):
+        """Show or hide the floating resource monitor window."""
+        if checked:
+            if self._resource_monitor is None:
+                from cadabrio.ui.panels.resource_monitor import ResourceMonitorWindow
+
+                self._resource_monitor = ResourceMonitorWindow(self)
+                self._resource_monitor.on_closed = self._on_resource_monitor_closed
+            self._resource_monitor.show()
+            self._resource_monitor.raise_()
+        else:
+            if self._resource_monitor is not None:
+                self._resource_monitor.close()
+                self._resource_monitor = None
+
+    def _on_resource_monitor_closed(self):
+        """Called when the resource monitor is closed via its X button."""
+        self._resource_monitor = None
+        self._resource_monitor_action.setChecked(False)
+
+    def set_integrations_status(self, detected: dict[str, bool]):
+        """Update the status bar with detected integrations."""
+        found = [name for name, ok in detected.items() if ok]
+        if found:
+            self._integrations_label.setText(f"Integrations: {', '.join(found)}")
+        else:
+            self._integrations_label.setText("Integrations: None detected")
+
     def _restore_state(self):
         """Restore window geometry from config (placeholder)."""
         pass
 
     def closeEvent(self, event):
         """Save state before closing."""
+        if self._resource_monitor is not None:
+            self._resource_monitor.close()
+            self._resource_monitor = None
         self._config.save()
         event.accept()

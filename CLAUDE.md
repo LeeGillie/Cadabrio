@@ -58,11 +58,13 @@ src/cadabrio/
 │       ├── viewport_3d.py    # 3D viewport (OpenGL placeholder)
 │       ├── chat_console.py   # AI chat/conversation console
 │       ├── asset_browser.py  # File browser with import support
-│       └── config_editor.py  # Tabbed config editor dialog
+│       ├── config_editor.py  # Tabbed config editor dialog
+│       └── resource_monitor.py # Floating system resource monitor (F9)
 ├── core/                # Core logic
 │   ├── project.py       # Project model with target types
 │   ├── pipeline.py      # Processing pipeline with stages
-│   └── scale_manager.py # Unit conversion and scale tracking
+│   ├── scale_manager.py # Unit conversion and scale tracking
+│   └── logging.py       # Centralized file logging with rotation
 ├── ai/                  # AI inference engine
 │   ├── engine.py        # PyTorch + CUDA inference engine
 │   ├── model_manager.py # Model discovery, download, lifecycle
@@ -85,7 +87,7 @@ src/cadabrio/
 
 ## Key Design Principles
 
-1. **Configuration everywhere** - All settings are grouped and editable via a tabbed config editor. Groups include: General, Appearance, GPU & Compute, AI Models, 3D Viewport, Photogrammetry, Integrations, Export, Network.
+1. **Configuration everywhere** - All settings are grouped and editable via a tabbed config editor. Groups include: General, Appearance, GPU & Compute, AI Models, 3D Viewport, Photogrammetry, Integrations, Export, Logging, Network.
 
 2. **Theme system** - Default "Cadabrio Dark" theme (dark background + neon green `#39ff14` accents). Supports built-in themes, Windows system themes, and user-created themes via a theme editor.
 
@@ -98,6 +100,10 @@ src/cadabrio/
 6. **Direct GPU control** - Uses PyTorch directly (not Ollama) for full control over model formats (SafeTensors, GGUF, ONNX) and GPU memory.
 
 7. **Attribution always** - Every borrowed open-source work gets attribution in ATTRIBUTIONS.md.
+
+8. **Centralized logging** - File-based logging via loguru with rotation and retention. Logs always capture DEBUG level to `%LOCALAPPDATA%/Cadabrio/Cadabrio/Logs/cadabrio.log` for diagnostics, console level controlled by config. Logs are compressed and rotated by size, retained by age.
+
+9. **Resource monitor** - Floating window (View > Resource Monitor, F9) showing real-time CPU, GPU utilization, RAM, VRAM, disk I/O, and network I/O. Uses psutil + pynvml. Toggleable on/off.
 
 ## Commands
 
@@ -128,6 +134,7 @@ Each group appears as a tab in the Preferences dialog (Ctrl+,):
 - **Photogrammetry**: feature detector, reconstruction method, quality
 - **Integrations**: paths to Blender, FreeCAD, Unreal Engine, Bambu Studio
 - **Export**: default format, target, scale factor, metadata
+- **Logging**: log level, file logging, retention, max size, console output
 - **Network**: offline mode, proxy, download settings
 
 ## Current Status
@@ -146,7 +153,11 @@ Each group appears as a tab in the Preferences dialog (Ctrl+,):
 - [x] Photogrammetry pipeline stub
 - [x] Import/export format handlers
 - [x] Scale management with unit conversion
-- [x] Test suite foundation
+- [x] Test suite foundation (16 tests passing)
+- [x] Integration auto-detection at startup (Blender, FreeCAD, Unreal, Bambu)
+- [x] Config editor with browse buttons, enum dropdowns, live theme switching
+- [x] Background file logging with rotation and retention (loguru)
+- [x] Floating Resource Monitor (CPU, GPU, RAM, VRAM, disk I/O, network I/O) — F9
 - [ ] OpenGL 3D viewport rendering
 - [ ] AI engine model loading and inference
 - [ ] Hugging Face model download

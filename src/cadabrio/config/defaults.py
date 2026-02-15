@@ -88,6 +88,15 @@ DEFAULT_CONFIG = {
         "stl_binary": True,
         "include_metadata": True,
     },
+    # --- Logging ---
+    "logging": {
+        "_label": "Logging",
+        "log_level": "INFO",  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+        "log_to_file": True,
+        "log_retention_days": 30,
+        "log_max_size_mb": 50,
+        "log_console_output": True,
+    },
     # --- Network ---
     "network": {
         "_label": "Network",

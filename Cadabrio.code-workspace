@@ -5,7 +5,7 @@
         }
     ],
     "settings": {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.conda/python",
+        "python.defaultInterpreterPath": "C:\\Users\\LeeGi\\AppData\\Local\\Programs\\Miniconda3\\python.exe",
         "python.condaPath": "conda",
         "python.terminal.activateEnvironment": true,
         "python.analysis.typeCheckingMode": "basic",
@@ -42,34 +42,6 @@
             "gruntfuggly.todo-tree",
             "tamasfe.even-better-toml",
             "redhat.vscode-yaml"
-        ]
-    },
-    "launch": {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Cadabrio: Launch",
-                "type": "debugpy",
-                "request": "launch",
-                "module": "cadabrio",
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "CADABRIO_DEV": "1"
-                },
-                "justMyCode": false
-            },
-            {
-                "name": "Cadabrio: Launch (Debug GPU)",
-                "type": "debugpy",
-                "request": "launch",
-                "module": "cadabrio",
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "CADABRIO_DEV": "1",
-                    "CUDA_LAUNCH_BLOCKING": "1"
-                },
-                "justMyCode": false
-            }
         ]
     }
 }

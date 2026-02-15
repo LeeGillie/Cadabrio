@@ -38,6 +38,12 @@ def main():
     config = ConfigManager()
     config.load()
 
+    # Initialize logging (file + console sinks)
+    splash.showStatusMessage("Starting logging...")
+    from cadabrio.core.logging import setup_logging
+
+    setup_logging(config)
+
     # Apply theme
     splash.showStatusMessage("Applying theme...")
     from cadabrio.config.themes.theme_manager import ThemeManager
@@ -54,7 +60,23 @@ def main():
     # AI engine init will go here
 
     splash.showStatusMessage("Detecting integrations...")
-    # Integration detection will go here
+    from cadabrio.integrations.blender import BlenderIntegration
+    from cadabrio.integrations.freecad import FreecadIntegration
+    from cadabrio.integrations.unreal import UnrealIntegration
+    from cadabrio.integrations.bambu_studio import BambuStudioIntegration
+
+    integrations = {
+        "Blender": BlenderIntegration(config),
+        "FreeCAD": FreecadIntegration(config),
+        "Unreal Engine": UnrealIntegration(config),
+        "Bambu Studio": BambuStudioIntegration(config),
+    }
+    detected = {}
+    for name, integration in integrations.items():
+        splash.showStatusMessage(f"Detecting {name}...")
+        detected[name] = integration.detect()
+
+    window.set_integrations_status(detected)
 
     splash.showStatusMessage("Ready.")
     window.show()
