@@ -34,6 +34,35 @@ class TestProject:
         project = Project(target=ProjectTarget.PRINT)
         assert project.target == ProjectTarget.PRINT
 
+    def test_save_and_load(self, tmp_path):
+        project = Project.new("TestProject", "print")
+        project.add_asset({"type": "image", "path": "test.png", "width": 100, "height": 100})
+        assert project.dirty is True
+
+        save_path = tmp_path / "test.cadabrio"
+        project.save(save_path)
+        assert save_path.exists()
+        assert project.dirty is False
+
+        loaded = Project.load(save_path)
+        assert loaded.name == "TestProject"
+        assert loaded.target == ProjectTarget.PRINT
+        assert len(loaded.assets) == 1
+        assert loaded.assets[0]["type"] == "image"
+        assert loaded.dirty is False
+
+    def test_save_appends_extension(self, tmp_path):
+        project = Project.new("Foo")
+        project.save(tmp_path / "Foo")
+        assert (tmp_path / "Foo.cadabrio").exists()
+
+    def test_new_project(self):
+        project = Project.new("Fresh", "blender")
+        assert project.name == "Fresh"
+        assert project.target == ProjectTarget.BLENDER
+        assert project.assets == []
+        assert project.dirty is False
+
 
 class TestPipeline:
     def test_empty_pipeline_progress(self):

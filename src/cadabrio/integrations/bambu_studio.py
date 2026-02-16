@@ -43,3 +43,7 @@ class BambuStudioIntegration:
     @property
     def available(self) -> bool:
         return self._bambu_path is not None
+
+    @property
+    def executable_path(self) -> Path | None:
+        return self._bambu_path

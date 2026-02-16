@@ -50,3 +50,7 @@ class BlenderIntegration:
     @property
     def available(self) -> bool:
         return self._blender_path is not None
+
+    @property
+    def executable_path(self) -> Path | None:
+        return self._blender_path

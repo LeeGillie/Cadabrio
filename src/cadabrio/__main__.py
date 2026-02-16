@@ -76,7 +76,7 @@ def main():
         splash.showStatusMessage(f"Detecting {name}...")
         detected[name] = integration.detect()
 
-    window.set_integrations_status(detected)
+    window.set_integrations_status(detected, integrations)
 
     splash.showStatusMessage("Ready.")
     window.show()

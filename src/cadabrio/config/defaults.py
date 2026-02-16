@@ -38,13 +38,22 @@ DEFAULT_CONFIG = {
     # --- AI Models ---
     "ai": {
         "_label": "AI Models",
-        "models_directory": "",  # default: ~/cadabrio/models
+        "models_directory": "",  # deprecated — models use HuggingFace cache
         "default_text_to_3d_model": "",
         "default_image_to_3d_model": "",
         "default_chat_model": "",
         "max_context_length": 8192,
         "inference_batch_size": 1,
         "download_source": "huggingface",  # huggingface, civitai, local
+        # Persisted model selections from AI Tools dialog
+        "selected_txt2img_model": "",
+        "selected_depth_model": "",
+        "selected_img2mesh_model": "",
+        "selected_segmentation_model": "",
+        "selected_chat_model": "",
+        # Reference image search preferences
+        "max_reference_candidates": 12,
+        "auto_accept_best_reference": True,
     },
     # --- 3D Viewport ---
     "viewport": {

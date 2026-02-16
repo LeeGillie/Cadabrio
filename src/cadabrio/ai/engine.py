@@ -34,7 +34,7 @@ class AIEngine:
                 props = torch.cuda.get_device_properties(device_idx)
                 logger.info(
                     f"AI Engine initialized on {props.name} "
-                    f"({props.total_mem / 1024**3:.1f} GB VRAM, "
+                    f"({props.total_memory / 1024**3:.1f} GB VRAM, "
                     f"compute capability {props.major}.{props.minor})"
                 )
 

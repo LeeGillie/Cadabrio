@@ -43,3 +43,14 @@ class UnrealIntegration:
     @property
     def available(self) -> bool:
         return self._ue_path is not None
+
+    @property
+    def executable_path(self) -> Path | None:
+        """Return the UE editor executable path."""
+        if self._ue_path is None:
+            return None
+        # UE stores the editor under Engine/Binaries/Win64/
+        editor = self._ue_path / "Engine" / "Binaries" / "Win64" / "UnrealEditor.exe"
+        if editor.exists():
+            return editor
+        return self._ue_path

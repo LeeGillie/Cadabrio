@@ -28,10 +28,16 @@ class CadabrioMainWindow(QMainWindow):
         self._config = config
         self._theme_mgr = theme_mgr
 
-        self.setWindowTitle(__version_display__)
         self.setMinimumSize(1280, 800)
 
         self._resource_monitor = None
+        self._integrations: dict = {}
+
+        # Active project
+        from cadabrio.core.project import Project
+
+        self._project = Project.new()
+        self._update_title()
 
         self._build_menu_bar()
         self._build_tool_bar()
@@ -47,11 +53,11 @@ class CadabrioMainWindow(QMainWindow):
 
         # File menu
         file_menu = menu_bar.addMenu("&File")
-        file_menu.addAction(self._action("&New Project", "Ctrl+N"))
-        file_menu.addAction(self._action("&Open Project...", "Ctrl+O"))
+        file_menu.addAction(self._action("&New Project", "Ctrl+N", self._new_project))
+        file_menu.addAction(self._action("&Open Project...", "Ctrl+O", self._open_project))
         file_menu.addSeparator()
-        file_menu.addAction(self._action("&Save", "Ctrl+S"))
-        file_menu.addAction(self._action("Save &As...", "Ctrl+Shift+S"))
+        file_menu.addAction(self._action("&Save", "Ctrl+S", self._save_project))
+        file_menu.addAction(self._action("Save &As...", "Ctrl+Shift+S", self._save_project_as))
         file_menu.addSeparator()
         file_menu.addAction(self._action("&Import...", "Ctrl+I"))
         file_menu.addAction(self._action("&Export...", "Ctrl+E"))
@@ -81,17 +87,42 @@ class CadabrioMainWindow(QMainWindow):
 
         # Tools menu
         tools_menu = menu_bar.addMenu("&Tools")
+        tools_menu.addAction(self._action("&AI Tools...", "Ctrl+G", self._open_ai_tools))
         tools_menu.addAction(self._action("&Photogrammetry Pipeline..."))
-        tools_menu.addAction(self._action("AI &Model Manager..."))
+        tools_menu.addAction(self._action("AI &Model Manager...", callback=self._open_model_manager))
         tools_menu.addSeparator()
-        tools_menu.addAction(self._action("&Theme Editor..."))
+        tools_menu.addAction(self._action("&Theme Editor...", callback=self._open_theme_editor))
 
-        # Integrations menu
-        int_menu = menu_bar.addMenu("&Integrations")
-        int_menu.addAction(self._action("&Blender"))
-        int_menu.addAction(self._action("&FreeCAD"))
-        int_menu.addAction(self._action("&Unreal Engine"))
-        int_menu.addAction(self._action("Bambu &Studio"))
+        # Integrations menu — each entry gets a submenu with Launch / Locate
+        self._int_menu = menu_bar.addMenu("&Integrations")
+        self._int_actions = {}
+        self._int_config_keys = {
+            "Blender": "blender_path",
+            "FreeCAD": "freecad_path",
+            "Unreal Engine": "unreal_engine_path",
+            "Bambu Studio": "bambu_studio_path",
+        }
+        for label, key in [
+            ("&Blender", "Blender"),
+            ("&FreeCAD", "FreeCAD"),
+            ("&Unreal Engine", "Unreal Engine"),
+            ("Bambu &Studio", "Bambu Studio"),
+        ]:
+            sub = self._int_menu.addMenu(label)
+            launch_action = self._action(
+                "Launch", callback=lambda checked=False, k=key: self._launch_integration(k)
+            )
+            launch_action.setEnabled(False)
+            sub.addAction(launch_action)
+            locate_action = self._action(
+                "Locate...", callback=lambda checked=False, k=key: self._locate_integration(k)
+            )
+            sub.addAction(locate_action)
+            self._int_actions[key] = {"launch": launch_action, "submenu": sub}
+        self._int_menu.addSeparator()
+        self._int_menu.addAction(
+            self._action("&Refresh Detection", callback=self._redetect_integrations)
+        )
 
         # Help menu
         help_menu = menu_bar.addMenu("&Help")
@@ -134,7 +165,7 @@ class CadabrioMainWindow(QMainWindow):
 
             if torch.cuda.is_available():
                 name = torch.cuda.get_device_name(0)
-                mem = torch.cuda.get_device_properties(0).total_mem / (1024**3)
+                mem = torch.cuda.get_device_properties(0).total_memory / (1024**3)
                 self._gpu_label.setText(f"GPU: {name} ({mem:.0f} GB)")
             else:
                 self._gpu_label.setText("GPU: CUDA not available")
@@ -160,6 +191,7 @@ class CadabrioMainWindow(QMainWindow):
         # Asset Browser (bottom dock)
         self._asset_dock = QDockWidget("Asset Browser", self)
         self._asset_panel = AssetBrowserPanel(self._config)
+        self._asset_panel.asset_imported.connect(self._on_asset_imported)
         self._asset_dock.setWidget(self._asset_panel)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._asset_dock)
 
@@ -171,6 +203,102 @@ class CadabrioMainWindow(QMainWindow):
         if callback:
             action.triggered.connect(callback)
         return action
+
+    # -------------------------------------------------------------------
+    # Project operations
+    # -------------------------------------------------------------------
+
+    def _update_title(self):
+        """Update window title to reflect current project."""
+        dirty = " *" if self._project.dirty else ""
+        self.setWindowTitle(f"{self._project.name}{dirty} — {__version_display__}")
+
+    def _confirm_discard(self) -> bool:
+        """If project has unsaved changes, ask user. Returns True to proceed."""
+        if not self._project.dirty:
+            return True
+        from PySide6.QtWidgets import QMessageBox
+
+        reply = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            f"Project '{self._project.name}' has unsaved changes.\n\nDiscard changes?",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+        )
+        if reply == QMessageBox.StandardButton.Save:
+            self._save_project()
+            return True
+        if reply == QMessageBox.StandardButton.Discard:
+            return True
+        return False  # Cancel
+
+    def _new_project(self):
+        """Create a new empty project."""
+        if not self._confirm_discard():
+            return
+        from cadabrio.core.project import Project
+
+        self._project = Project.new()
+        self._status_label.setText("New project created")
+        self._update_title()
+
+    def _open_project(self):
+        """Open a project file from disk."""
+        if not self._confirm_discard():
+            return
+        from PySide6.QtWidgets import QFileDialog
+        from cadabrio.core.project import Project, PROJECT_EXTENSION
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open Project", "",
+            f"Cadabrio Projects (*{PROJECT_EXTENSION});;All Files (*)"
+        )
+        if not path:
+            return
+        try:
+            self._project = Project.load(path)
+            self._status_label.setText(f"Opened: {self._project.name}")
+            self._update_title()
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.critical(self, "Open Failed", f"Could not open project:\n\n{e}")
+
+    def _save_project(self):
+        """Save the current project. Prompts for path if new."""
+        if self._project.path is None:
+            self._save_project_as()
+            return
+        try:
+            self._project.save()
+            self._status_label.setText(f"Saved: {self._project.path.name}")
+            self._update_title()
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.critical(self, "Save Failed", f"Could not save project:\n\n{e}")
+
+    def _save_project_as(self):
+        """Save the current project to a new path."""
+        from PySide6.QtWidgets import QFileDialog
+        from cadabrio.core.project import PROJECT_EXTENSION
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Project As", self._project.name,
+            f"Cadabrio Projects (*{PROJECT_EXTENSION});;All Files (*)"
+        )
+        if not path:
+            return
+        try:
+            self._project.save(path)
+            self._status_label.setText(f"Saved: {self._project.path.name}")
+            self._update_title()
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.critical(self, "Save Failed", f"Could not save project:\n\n{e}")
 
     def _open_preferences(self):
         """Open the configuration editor dialog."""
@@ -220,6 +348,87 @@ class CadabrioMainWindow(QMainWindow):
             "<p>Full attribution details in ATTRIBUTIONS.md</p>",
         )
 
+    def _open_ai_tools(self):
+        """Open the AI Tools dialog."""
+        from cadabrio.ui.widgets.ai_tools_dialog import AIToolsDialog
+
+        dialog = AIToolsDialog(self._config, self)
+        dialog.exec()
+
+    def _open_theme_editor(self):
+        """Open the Theme Editor dialog."""
+        from cadabrio.ui.widgets.theme_editor import ThemeEditorDialog
+
+        dialog = ThemeEditorDialog(self._config, self._theme_mgr, self)
+        dialog.exec()
+
+    def _open_model_manager(self):
+        """Open the AI Model Manager dialog."""
+        from cadabrio.ui.widgets.model_manager_dialog import ModelManagerDialog
+
+        dialog = ModelManagerDialog(self._config, self)
+        dialog.exec()
+
+    def _launch_integration(self, name: str):
+        """Launch an external integration application."""
+        import subprocess
+        from PySide6.QtWidgets import QMessageBox
+
+        integration = self._integrations.get(name)
+        if not integration or not integration.available:
+            QMessageBox.warning(
+                self, "Not Available",
+                f"{name} was not detected on this system.\n\n"
+                "Check Preferences > Integrations to set the path manually.",
+            )
+            return
+
+        exe_path = integration.executable_path
+        if not exe_path or not exe_path.exists():
+            QMessageBox.warning(self, "Not Found", f"Could not find {name} executable.")
+            return
+
+        try:
+            subprocess.Popen([str(exe_path)], start_new_session=True)
+            self._status_label.setText(f"Launched {name}")
+        except Exception as e:
+            QMessageBox.critical(self, "Launch Failed", f"Could not launch {name}:\n\n{e}")
+
+    def _locate_integration(self, name: str):
+        """Let the user browse for an integration executable."""
+        from PySide6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, f"Locate {name}", "",
+            "Executables (*.exe);;All Files (*)"
+        )
+        if not path:
+            return
+        config_key = self._int_config_keys.get(name)
+        if config_key:
+            self._config.set("integrations", config_key, path)
+            self._config.save()
+        self._redetect_integrations()
+
+    def _redetect_integrations(self):
+        """Re-run integration detection and update the menu."""
+        from cadabrio.integrations.blender import BlenderIntegration
+        from cadabrio.integrations.freecad import FreecadIntegration
+        from cadabrio.integrations.unreal import UnrealIntegration
+        from cadabrio.integrations.bambu_studio import BambuStudioIntegration
+
+        integrations = {
+            "Blender": BlenderIntegration(self._config),
+            "FreeCAD": FreecadIntegration(self._config),
+            "Unreal Engine": UnrealIntegration(self._config),
+            "Bambu Studio": BambuStudioIntegration(self._config),
+        }
+        detected = {}
+        for iname, integration in integrations.items():
+            detected[iname] = integration.detect()
+        self.set_integrations_status(detected, integrations)
+        self._status_label.setText("Integration detection refreshed")
+
     def _toggle_resource_monitor(self, checked: bool):
         """Show or hide the floating resource monitor window."""
         if checked:
@@ -240,20 +449,38 @@ class CadabrioMainWindow(QMainWindow):
         self._resource_monitor = None
         self._resource_monitor_action.setChecked(False)
 
-    def set_integrations_status(self, detected: dict[str, bool]):
-        """Update the status bar with detected integrations."""
+    def _on_asset_imported(self, metadata: dict):
+        """Handle a newly imported asset from the asset browser."""
+        self._project.add_asset(metadata)
+        self._update_title()
+
+    def set_integrations_status(self, detected: dict[str, bool], instances: dict | None = None):
+        """Update the status bar and menu with detected integrations."""
+        if instances is not None:
+            self._integrations = instances
         found = [name for name, ok in detected.items() if ok]
         if found:
             self._integrations_label.setText(f"Integrations: {', '.join(found)}")
         else:
             self._integrations_label.setText("Integrations: None detected")
+        # Update menu items: enable launch, show status in submenu title
+        for name, ok in detected.items():
+            if name not in self._int_actions:
+                continue
+            entry = self._int_actions[name]
+            entry["launch"].setEnabled(ok)
+            indicator = "\u2714" if ok else "\u2718"  # checkmark / X
+            entry["submenu"].setTitle(f"{indicator}  {name}")
 
     def _restore_state(self):
         """Restore window geometry from config (placeholder)."""
         pass
 
     def closeEvent(self, event):
-        """Save state before closing."""
+        """Save state before closing. Prompt if project is unsaved."""
+        if not self._confirm_discard():
+            event.ignore()
+            return
         if self._resource_monitor is not None:
             self._resource_monitor.close()
             self._resource_monitor = None

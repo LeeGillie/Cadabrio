@@ -30,12 +30,12 @@ class CadabrioSplashScreen(QSplashScreen):
         rect = self.rect()
 
         # --- Version in upper-right corner ---
-        version_font = QFont("Segoe UI", 16, QFont.Weight.Bold)
+        version_font = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(version_font)
 
         # Draw text shadow
         painter.setPen(QColor(0, 0, 0, 180))
-        version_rect = rect.adjusted(0, 18, -22, 0)
+        version_rect = rect.adjusted(0, 10, -12, 0)
         painter.drawText(
             version_rect.adjusted(1, 1, 1, 1),
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
@@ -52,10 +52,10 @@ class CadabrioSplashScreen(QSplashScreen):
 
         # --- Status message in bottom-left corner ---
         if self._status_message:
-            status_font = QFont("Segoe UI", 11)
+            status_font = QFont("Segoe UI", 8)
             painter.setFont(status_font)
 
-            status_rect = rect.adjusted(20, 0, 0, -16)
+            status_rect = rect.adjusted(10, 0, 0, -8)
 
             # Draw text shadow
             painter.setPen(QColor(0, 0, 0, 180))
@@ -87,6 +87,13 @@ def show_splash(app: QApplication) -> CadabrioSplashScreen:
         # Fallback: create a simple dark pixmap if image not found
         pixmap = QPixmap(800, 450)
         pixmap.fill(QColor("#0d0d1a"))
+    else:
+        # Show the full image at half size
+        pixmap = pixmap.scaled(
+            pixmap.width() // 2, pixmap.height() // 2,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
 
     splash = CadabrioSplashScreen(pixmap)
     splash.show()
